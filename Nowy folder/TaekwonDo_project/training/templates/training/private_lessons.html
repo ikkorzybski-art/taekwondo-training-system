@@ -1,0 +1,87 @@
+{% extends 'training/base.html' %}
+
+{% block title %}Zajęcia Indywidualne - System Treningowy Taekwon-Do{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-user-clock"></i> Dostępne Zajęcia Indywidualne</h2>
+        <a href="{% url 'training:my_private_lessons' %}" class="btn btn-primary">
+            <i class="fas fa-calendar-check"></i> Moje Zajęcia
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if lessons_by_instructor %}
+        {% for instructor, lessons in lessons_by_instructor.items %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-tie"></i> {{ instructor.get_full_name }}
+                        {% if instructor.profile.belt_level %}
+                            <span class="badge bg-light text-dark">{{ instructor.profile.get_belt_level_display }}</span>
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for lesson in lessons %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 border-success">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-calendar-day"></i> {{ lesson.date|date:"d.m.Y (l)" }}
+                                        </h5>
+                                        <p class="card-text">
+                                            <i class="fas fa-clock"></i> <strong>Godzina:</strong> {{ lesson.start_time|time:"H:i" }} - {{ lesson.end_time|time:"H:i" }}
+                                        </p>
+                                        <p class="card-text">
+                                            <i class="fas fa-hourglass-half"></i> <strong>Czas trwania:</strong> 
+                                            {% widthratio lesson.end_time.hour 1 60 %}{% widthratio lesson.end_time.minute 1 1 as end_min %}
+                                            {% widthratio lesson.start_time.hour 1 60 %}{% widthratio lesson.start_time.minute 1 1 as start_min %}
+                                            {{ end_min|add:0|add:start_min|add:0|add:"-"|add:start_min|add:"-"|add:0 }} minut
+                                        </p>
+                                        <span class="badge bg-success mb-2">
+                                            <i class="fas fa-check-circle"></i> Dostępne
+                                        </span>
+                                        <form method="post" action="{% url 'training:book_private_lesson' lesson.id %}" class="mt-2">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success w-100" 
+                                                    onclick="return confirm('Czy na pewno chcesz zapisać się na te zajęcia?')">
+                                                <i class="fas fa-calendar-plus"></i> Zapisz się
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Obecnie brak dostępnych terminów zajęć indywidualnych. Sprawdź ponownie później.
+        </div>
+    {% endif %}
+
+    <div class="card mt-4 bg-light">
+        <div class="card-body">
+            <h5><i class="fas fa-info-circle"></i> Informacje</h5>
+            <ul class="mb-0">
+                <li>Zajęcia indywidualne można anulować do 24 godzin przed rozpoczęciem</li>
+                <li>Po zapisaniu się na zajęcia otrzymasz potwierdzenie w swoim panelu</li>
+                <li>W przypadku pytań skontaktuj się z instruktorem</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

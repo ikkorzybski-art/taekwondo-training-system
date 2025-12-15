@@ -1,0 +1,18 @@
+{% extends 'training/base.html' %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <i class="fas fa-lock fa-5x text-danger mb-4"></i>
+            <h1 class="display-4">Brak uprawnień</h1>
+            <p class="lead text-muted">Nie masz uprawnień do przeglądania tej strony.</p>
+            <hr class="my-4">
+            <p>Próbowałeś uzyskać dostęp do chronionej części systemu.</p>
+            <a href="{% url 'training:home' %}" class="btn btn-primary btn-lg mt-3">
+                <i class="fas fa-home"></i> Wróć do strony głównej
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

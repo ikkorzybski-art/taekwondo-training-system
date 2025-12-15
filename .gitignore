@@ -1,0 +1,43 @@
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+__pycache__/
+*.pyc
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Secrets
+*.env
+.env
+secrets.py
+SECRET_KEY
+
+# Migrations (opcjonalnie - usuń tę linię jeśli chcesz wrzucić migracje)
+# */migrations/*.py
+# !*/migrations/__init__.py

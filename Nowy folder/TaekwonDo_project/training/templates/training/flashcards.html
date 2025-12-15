@@ -1,0 +1,88 @@
+{% extends 'training/base.html' %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="fas fa-book"></i> Fiszki</h2>
+            <a href="{% url 'training:flashcard_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Dodaj fiszkę</a>
+        </div>
+        
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-5">
+                        <select name="category" class="form-select">
+                            <option value="">Wszystkie kategorie</option>
+                            {% for value, label in categories %}
+                            <option value="{{ value }}" {% if request.GET.category == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <select name="group" class="form-select">
+                            <option value="">Wszystkie grupy</option>
+                            {% for value, label in groups %}
+                            <option value="{{ value }}" {% if request.GET.group == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filtruj</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for flashcard in flashcards %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 flashcard-container">
+                    <div class="card-body">
+                        <div class="flashcard-front">
+                            <h5>
+                                <span class="badge bg-info">{{ flashcard.get_category_display }}</span>
+                                <span class="badge bg-secondary">{{ flashcard.get_group_display }}</span>
+                            </h5>
+                            <p class="mt-3"><strong>{{ flashcard.question }}</strong></p>
+                            <button class="btn btn-sm btn-outline-primary show-answer">Pokaż odpowiedź</button>
+                        </div>
+                        <div class="flashcard-back" style="display:none;">
+                            <h5>Odpowiedź:</h5>
+                            <p>{{ flashcard.answer }}</p>
+                            <button class="btn btn-sm btn-outline-secondary hide-answer">Ukryj odpowiedź</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">Brak fiszek spełniających kryteria.</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.show-answer').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const card = this.closest('.card-body');
+            card.querySelector('.flashcard-front').style.display = 'none';
+            card.querySelector('.flashcard-back').style.display = 'block';
+        });
+    });
+
+    document.querySelectorAll('.hide-answer').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const card = this.closest('.card-body');
+            card.querySelector('.flashcard-back').style.display = 'none';
+            card.querySelector('.flashcard-front').style.display = 'block';
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'training/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h3 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Brak dostępu</h3>
+            </div>
+            <div class="card-body text-center">
+                <i class="fas fa-lock fa-5x text-warning mb-4"></i>
+                <h4>Rejestracja jest niedostępna</h4>
+                <p class="lead">Nowi użytkownicy mogą być dodani tylko przez administratora systemu.</p>
+                <hr>
+                <p><strong>Jak uzyskać dostęp?</strong></p>
+                <ol class="text-start">
+                    <li>Skontaktuj się z administratorem klubu Taekwon-Do</li>
+                    <li>Podaj swoje dane: imię, nazwisko, email, telefon</li>
+                    <li>Administrator utworzy dla Ciebie konto i przekaże dane logowania</li>
+                </ol>
+                <div class="mt-4">
+                    <a href="{% url 'training:home' %}" class="btn btn-primary"><i class="fas fa-home"></i> Wróć na stronę główną</a>
+                    <a href="{% url 'training:login' %}" class="btn btn-success"><i class="fas fa-sign-in-alt"></i> Mam już konto - Zaloguj</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

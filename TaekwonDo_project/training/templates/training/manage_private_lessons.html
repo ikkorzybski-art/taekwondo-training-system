@@ -1,0 +1,207 @@
+{% extends 'training/base.html' %}
+
+{% block title %}Zarządzanie Zajęciami Indywidualnymi - System Treningowy Taekwon-Do{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-calendar-alt"></i> Zarządzanie Zajęciami Indywidualnymi</h2>
+    <p class="text-muted">Panel administracyjny do tworzenia i zarządzania terminami zajęć indywidualnych</p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Statystyki -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-check-circle"></i> Dostępne</h5>
+                    <h2 class="mb-0">{{ available_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-calendar-check"></i> Zarezerwowane</h5>
+                    <h2 class="mb-0">{{ booked_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-check"></i> Ukończone</h5>
+                    <h2 class="mb-0">{{ completed_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formularz dodawania zajęć -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Dodaj Termin Zajęć Indywidualnych</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'training:generate_weekly_lessons' %}">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="instructor_id" class="form-label">Instruktor:</label>
+                        <select name="instructor_id" id="instructor_id" class="form-select" required>
+                            <option value="">-- Wybierz instruktora --</option>
+                            {% for instructor in instructors %}
+                                <option value="{{ instructor.id }}">
+                                    {{ instructor.get_full_name }} 
+                                    {% if instructor.profile.belt_level %}
+                                        ({{ instructor.profile.get_belt_level_display }})
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="weekday" class="form-label">Dzień tygodnia:</label>
+                        <select name="weekday" id="weekday" class="form-select" required>
+                            <option value="">-- Wybierz dzień --</option>
+                            <option value="1">Wtorek</option>
+                            <option value="2">Środa</option>
+                            <option value="3">Czwartek</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="start_time" class="form-label">Godzina od:</label>
+                        <input type="time" name="start_time" id="start_time" class="form-control" value="17:00" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="end_time" class="form-label">Godzina do:</label>
+                        <input type="time" name="end_time" id="end_time" class="form-control" value="18:00" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Dodaj
+                        </button>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    <i class="fas fa-info-circle"></i> Wybierz dzień tygodnia - system utworzy termin w najbliższy wybrany dzień.
+                </small>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista zajęć -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h4 class="mb-0"><i class="fas fa-list"></i> Wszystkie Zajęcia Indywidualne</h4>
+        </div>
+        <div class="card-body">
+            {% if lessons %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-calendar"></i> Data</th>
+                                <th><i class="fas fa-calendar-week"></i> Dzień</th>
+                                <th><i class="fas fa-clock"></i> Godzina</th>
+                                <th><i class="fas fa-user-tie"></i> Instruktor</th>
+                                <th><i class="fas fa-user"></i> Uczestnik</th>
+                                <th><i class="fas fa-info-circle"></i> Status</th>
+                                <th><i class="fas fa-cogs"></i> Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lesson in lessons %}
+                                <tr>
+                                    <td>{{ lesson.date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        {% if lesson.date.weekday == 0 %}
+                                            <span class="badge bg-secondary">Poniedziałek</span>
+                                        {% elif lesson.date.weekday == 1 %}
+                                            <span class="badge bg-primary">Wtorek</span>
+                                        {% elif lesson.date.weekday == 2 %}
+                                            <span class="badge bg-info">Środa</span>
+                                        {% elif lesson.date.weekday == 3 %}
+                                            <span class="badge bg-success">Czwartek</span>
+                                        {% elif lesson.date.weekday == 4 %}
+                                            <span class="badge bg-warning">Piątek</span>
+                                        {% elif lesson.date.weekday == 5 %}
+                                            <span class="badge bg-dark">Sobota</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Niedziela</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ lesson.start_time|time:"H:i" }} - {{ lesson.end_time|time:"H:i" }}</td>
+                                    <td>{{ lesson.instructor.get_full_name }}</td>
+                                    <td>
+                                        {% if lesson.student %}
+                                            {{ lesson.student.get_full_name }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if lesson.status == 'available' %}
+                                            <span class="badge bg-success"><i class="fas fa-check-circle"></i> Dostępne</span>
+                                        {% elif lesson.status == 'booked' %}
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-calendar-check"></i> Zarezerwowane</span>
+                                        {% elif lesson.status == 'completed' %}
+                                            <span class="badge bg-info"><i class="fas fa-check"></i> Ukończone</span>
+                                        {% elif lesson.status == 'cancelled' %}
+                                            <span class="badge bg-danger"><i class="fas fa-times"></i> Anulowane</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if lesson.status == 'booked' %}
+                                            <form method="post" action="{% url 'training:mark_lesson_completed' lesson.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-info" title="Oznacz jako ukończone">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        {% if lesson.status != 'booked' %}
+                                            <form method="post" action="{% url 'training:delete_private_lesson' lesson.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger" 
+                                                        onclick="return confirm('Czy na pewno usunąć ten termin?')"
+                                                        title="Usuń termin">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Brak utworzonych terminów zajęć indywidualnych. Użyj formularza powyżej, aby dodać termin.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mt-4 bg-light">
+        <div class="card-body">
+            <h5><i class="fas fa-info-circle"></i> Informacje</h5>
+            <ul class="mb-0">
+                <li><strong>Dodawanie terminów:</strong> Wybierz instruktora, datę i godziny zajęć</li>
+                <li><strong>Duplikaty:</strong> System nie utworzy duplikatów istniejących terminów</li>
+                <li><strong>Usuwanie:</strong> Można usunąć tylko terminy niezarezerwowane</li>
+                <li><strong>Ukończone:</strong> Zarezerwowane zajęcia można oznaczyć jako ukończone</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
