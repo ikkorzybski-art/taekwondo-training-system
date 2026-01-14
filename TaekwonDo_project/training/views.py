@@ -399,8 +399,18 @@ def quiz_take(request, pk):
     
     # Jeśli jest ukończona próba i użytkownik nie zażądał ponowienia (retry=1), przekieruj do wyników
     retry = request.GET.get('retry')
+
+    # DEBUG: logujemy kto i co żąda — pomocne przy problemach z przekierowaniem
+    try:
+        print(f"DEBUG quiz_take: user={{request.user.username if request.user.is_authenticated else request.user}}, authenticated={{request.user.is_authenticated}}, latest_attempt_id={{latest_attempt.id if latest_attempt else None}}, retry={{retry}}")
+    except Exception as e:
+        print('DEBUG quiz_take: failed to print debug info', e)
+
     if latest_attempt and retry != '1':
+        print(f"DEBUG quiz_take: redirecting to result, attempt_id={{latest_attempt.id}}")
         return redirect('training:quiz_result', pk=pk, attempt_id=latest_attempt.id)
+    else:
+        print('DEBUG quiz_take: allowing attempt (retry requested or no previous attempt)')
     
     if request.method == 'POST':
         score = 0
