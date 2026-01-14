@@ -773,15 +773,6 @@ def quiz_result(request, pk, attempt_id):
             'all_answers': all_answers
         })
 
-@login_required
-def my_results(request):
-    """Lista wszystkich prób użytkownika (Moje wyniki)"""
-    attempts = QuizAttempt.objects.filter(user=request.user).select_related('quiz').order_by('-started_at')
-
-    return render(request, 'training/my_results.html', {
-        'attempts': attempts,
-    })
-
     # Statystyki
     if attempts.exists():
         best_score = attempts.order_by('-percentage').first()
@@ -789,7 +780,7 @@ def my_results(request):
     else:
         best_score = None
         avg_score = 0
-    
+
     context = {
         'quiz': quiz,
         'attempt': attempt,
@@ -799,6 +790,15 @@ def my_results(request):
         'avg_score': avg_score,
     }
     return render(request, 'training/quiz_result.html', context)
+
+@login_required
+def my_results(request):
+    """Lista wszystkich prób użytkownika (Moje wyniki)"""
+    attempts = QuizAttempt.objects.filter(user=request.user).select_related('quiz').order_by('-started_at')
+
+    return render(request, 'training/my_results.html', {
+        'attempts': attempts,
+    })
 
 def index(request):
     """Widok index - przekierowanie na stronÄ™ gĹ‚ĂłwnÄ…"""
