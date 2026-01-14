@@ -52,12 +52,27 @@
                         <a href="{% url 'training:quiz_list' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Powrót do listy quizów
                         </a>
-                        {% if quiz.is_active %}
-                        <a href="{% url 'training:quiz_take' pk=quiz.pk %}?retry=1" class="btn btn-primary ms-2">
+                                {% if quiz.is_active %}
+                        <button type="button" class="btn btn-primary ms-2 retry-quiz" data-url="{% url 'training:quiz_take' pk=quiz.pk %}?retry=1">
                             <i class="fas fa-redo"></i> Rozwiąż ponownie
-                        </a>
-                        {% endif %}
+                        </button>
+                    {% endif %}
                     </div>
+
+<!-- Skrypt: przekierowanie po kliknięciu przycisku "Rozwiąż ponownie" -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.querySelector('.retry-quiz');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            var url = btn.getAttribute('data-url');
+            if (url) {
+                window.location.href = url;
+            }
+        });
+    }
+});
+</script>
                 </div>
             </div>
 
