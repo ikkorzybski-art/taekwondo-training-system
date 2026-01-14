@@ -772,7 +772,16 @@ def quiz_result(request, pk, attempt_id):
             'is_correct': user_answer.is_correct,
             'all_answers': all_answers
         })
-    
+
+@login_required
+def my_results(request):
+    """Lista wszystkich prób użytkownika (Moje wyniki)"""
+    attempts = QuizAttempt.objects.filter(user=request.user).select_related('quiz').order_by('-started_at')
+
+    return render(request, 'training/my_results.html', {
+        'attempts': attempts,
+    })
+
     # Statystyki
     if attempts.exists():
         best_score = attempts.order_by('-percentage').first()

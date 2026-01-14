@@ -37,6 +37,9 @@ urlpatterns = [
     path('quizzes/', views.quiz_list, name='quiz_list'),
     path('quizzes/<int:pk>/take/', views.quiz_take, name='quiz_take'),
     path('quizzes/<int:pk>/result/<int:attempt_id>/', views.quiz_result, name='quiz_result'),
+
+    # Moje wyniki
+    path('my-results/', views.my_results, name='my_results'),
     
     # Zajęcia indywidualne (ADMIN)
     path('manage-private-lessons/', views.manage_private_lessons, name='manage_private_lessons'),
