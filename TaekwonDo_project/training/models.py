@@ -4,6 +4,9 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+# Ordering of groups from lowest to highest
+GROUP_ORDER = ['white', 'yellow', 'green', 'blue', 'red', 'black']
+
 class UserProfile(models.Model):
     """Profil użytkownika"""
     BELT_CHOICES = [
@@ -39,6 +42,25 @@ class UserProfile(models.Model):
     temporary_password = models.CharField(max_length=255, blank=True, verbose_name='Hasło tymczasowe')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Data rejestracji')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Ostatnia aktualizacja')
+
+    def belt_group(self):
+        mapping = {
+            'white': 'white',
+            'yellow_white': 'yellow', 'yellow': 'yellow',
+            'green_yellow': 'green', 'green': 'green',
+            'blue_green': 'blue', 'blue': 'blue',
+            'red_blue': 'red', 'red': 'red',
+            'black_red': 'black', 'black_1': 'black', 'black_2': 'black', 'black_3': 'black',
+            'black_4': 'black', 'black_5': 'black', 'black_6': 'black', 'black_7': 'black',
+            'black_8': 'black', 'black_9': 'black',
+        }
+        return mapping.get(self.belt_level, 'white')
+
+    def belt_group_rank(self):
+        try:
+            return GROUP_ORDER.index(self.belt_group())
+        except ValueError:
+            return 0
     
 class Meta:
         verbose_name = 'Profil użytkownika'
@@ -151,6 +173,12 @@ class Flashcard(models.Model):
     def __str__(self):
         return f"{self.get_category_display()} - {self.question[:50]}"
 
+    def group_rank(self):
+        try:
+            return GROUP_ORDER.index(self.group)
+        except ValueError:
+            return 0
+
 class Quiz(models.Model):
     """Quizy"""
     title = models.CharField(max_length=200, verbose_name='Tytuł')
@@ -162,6 +190,13 @@ class Quiz(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Data utworzenia')
     is_active = models.BooleanField(default=True, verbose_name='Aktywny')
     attempts_count = models.IntegerField(default=0, verbose_name='Liczba prób')
+    # Ograniczenie: maksymalna grupa (kto może rozwiązywać quiz)
+    max_group = models.CharField(
+        max_length=20,
+        choices=Flashcard.GROUP_CHOICES,
+        default='black',
+        verbose_name='Maksymalna grupa'
+    )
     
     class Meta:
         verbose_name = 'Quiz'
@@ -170,6 +205,20 @@ class Quiz(models.Model):
     
     def __str__(self):
         return self.title
+
+    def max_group_rank(self):
+        try:
+            return GROUP_ORDER.index(self.max_group)
+        except ValueError:
+            return len(GROUP_ORDER) - 1
+
+    def allowed_for_user(self, user):
+        # staff and superusers bypass restrictions
+        if user.is_staff or user.is_superuser:
+            return True
+        if not hasattr(user, 'profile'):
+            return False
+        return user.profile.belt_group_rank() >= self.max_group_rank()
 
 class QuizQuestion(models.Model):
     """Pytania w quizie"""

@@ -337,6 +337,15 @@ def flashcards_list(request):
     flashcards = Flashcard.objects.filter(
         Q(is_public=True) | Q(created_by=request.user)
     )
+
+    # Ograniczenie dostępu do fiszek według stopnia pasa
+    if not request.user.is_staff:
+        user_rank = request.user.profile.belt_group_rank() if hasattr(request.user, 'profile') else 0
+        allowed_groups = [g for g, _ in Flashcard.GROUP_CHOICES][:user_rank + 1]
+        flashcards = flashcards.filter(group__in=allowed_groups)
+        # jeśli użytkownik wybrał grupę wyższą niż dozwolona, ignorujemy filtr
+        if group and group not in allowed_groups:
+            group = ''
     
     if category:
         flashcards = flashcards.filter(category=category)
@@ -376,6 +385,12 @@ def quiz_list(request):
     quizzes = Quiz.objects.filter(is_active=True).annotate(
         questions_count=Count('questions')
     )
+
+    # Ograniczenie quizów według stopnia pasa
+    if not request.user.is_staff:
+        user_rank = request.user.profile.belt_group_rank() if hasattr(request.user, 'profile') else 0
+        allowed_groups = [g for g, _ in Flashcard.GROUP_CHOICES][:user_rank + 1]
+        quizzes = quizzes.filter(max_group__in=allowed_groups)
     
     for quiz in quizzes:
         quiz.user_attempts = QuizAttempt.objects.filter(
@@ -388,6 +403,12 @@ def quiz_list(request):
 def quiz_take(request, pk):
     """Rozwiązywanie quizu"""
     quiz = get_object_or_404(Quiz, pk=pk, is_active=True)
+
+    # Ograniczenie: sprawdź uprawnienia użytkownika do tego quizu
+    if not quiz.allowed_for_user(request.user):
+        messages.error(request, 'Nie masz uprawnień, aby rozpocząć ten quiz.')
+        return redirect('training:quiz_list')
+
     questions = quiz.questions.prefetch_related('answers').all()
     
     # Sprawdź czy użytkownik już rozwiązał ten quiz
