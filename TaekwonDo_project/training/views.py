@@ -397,8 +397,9 @@ def quiz_take(request, pk):
         completed_at__isnull=False
     ).order_by('-completed_at').first()
     
-    # Jeśli jest ukończona próba, przekieruj do wyników
-    if latest_attempt:
+    # Jeśli jest ukończona próba i użytkownik nie zażądał ponowienia (retry=1), przekieruj do wyników
+    retry = request.GET.get('retry')
+    if latest_attempt and retry != '1':
         return redirect('training:quiz_result', pk=pk, attempt_id=latest_attempt.id)
     
     if request.method == 'POST':
