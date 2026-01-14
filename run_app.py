@@ -20,8 +20,19 @@ def main():
         os.chdir(manage_dir)
 
     try:
-        from django.core.management import execute_from_command_line
-        execute_from_command_line([sys.argv[0], "runserver", "127.0.0.1:8000"])
+        # Jeśli pakowane jako .exe, uruchom WSGI server (waitress)
+        if getattr(sys, "frozen", False):
+            try:
+                from TaekwonDo_project.wsgi import application
+                from waitress import serve
+                print("Uruchamiam WSGI server (waitress) na http://127.0.0.1:8000")
+                serve(application, host="127.0.0.1", port=8000)
+            except Exception as e:
+                print("Błąd uruchomienia WSGI servera:", e)
+                input("Naciśnij Enter aby zakończyć...")
+        else:
+            from django.core.management import execute_from_command_line
+            execute_from_command_line([sys.argv[0], "runserver", "127.0.0.1:8000"])
     except Exception as e:
         print("Błąd uruchomienia aplikacji:", e)
         input("Naciśnij Enter aby zakończyć...")
