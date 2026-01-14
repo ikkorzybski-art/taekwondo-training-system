@@ -65,8 +65,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise to serve static files when running as executable
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -144,14 +142,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-# Directory where `collectstatic` will collect static files for deployment
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-# Include app static folders (useful for serving without collectstatic)
-STATICFILES_DIRS = [
-    BASE_DIR / 'training' / 'static',
-]
-# Use WhiteNoise storage to serve compressed files when deployed
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
