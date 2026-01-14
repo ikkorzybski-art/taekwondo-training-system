@@ -56,11 +56,21 @@
                         <a href="{% url 'training:quiz_take' pk=quiz.pk %}?retry=1" class="btn btn-primary ms-2 retry-quiz" data-url="{% url 'training:quiz_take' pk=quiz.pk %}?retry=1" role="button" aria-label="Rozwiąż ponownie">
                             <i class="fas fa-redo"></i> Rozwiąż ponownie
                         </a>
+
+                        <!-- DEBUG: tymczasowy przycisk do testów, usuń po debugowaniu -->
+                        <a href="#" id="debug-retry" class="btn btn-warning ms-2" role="button" aria-label="DEBUG Rozwiąż ponownie">
+                            <i class="fas fa-bug"></i> DEBUG: Force go to quiz
+                        </a>
                     {% endif %}
                     </div>
 
-<!-- Skrypt: przekierowanie po kliknięciu przycisku "Rozwiąż ponownie" (capture, fallback) -->
+<!-- Skrypt: przekierowanie po kliknięciu przycisku "Rozwiąż ponownie" (capture, fallback) + global logger -->
 <script>
+// Global click logger (capture) to diagnose interception
+window.addEventListener('click', function(e){
+    console.log('GLOBAL CLICK (capture):', e.type, e.target, e.composedPath && e.composedPath());
+}, true);
+
 document.addEventListener('DOMContentLoaded', function() {
     var retryButtons = document.querySelectorAll('.retry-quiz');
     if (retryButtons.length) {
@@ -68,10 +78,10 @@ document.addEventListener('DOMContentLoaded', function() {
             var url = btn.getAttribute('data-url') || btn.href;
             // Use capture phase to preempt other handlers and ensure navigation
             btn.addEventListener('click', function(e) {
-                try {
-                    e.stopImmediatePropagation();
-                } catch (err) {}
+                try { e.stopImmediatePropagation(); } catch (err) {}
                 e.preventDefault();
+                // Show quick console marker
+                console.log('Retry button clicked, navigating to:', url);
                 if (url) {
                     // Primary navigation
                     window.location.assign(url);
@@ -80,6 +90,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, true); // capture=true
         });
+    }
+
+    // Debug button: explicit alert + navigation to check if clicks reach element
+    var dbg = document.getElementById('debug-retry');
+    if (dbg) {
+        dbg.addEventListener('click', function(e){
+            e.preventDefault();
+            var url = "{% url 'training:quiz_take' pk=quiz.pk %}?retry=1";
+            alert('DEBUG: navigating to ' + url);
+            console.log('DEBUG button clicked, going to', url);
+            window.location.assign(url);
+        }, true);
     }
 });
 </script>
