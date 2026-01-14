@@ -53,7 +53,7 @@
                             <i class="fas fa-arrow-left"></i> Powrót do listy quizów
                         </a>
                                 {% if quiz.is_active %}
-                        <button type="button" class="btn btn-primary ms-2 retry-quiz" data-url="{% url 'training:quiz_take' pk=quiz.pk %}?retry=1">
+                        <button type="button" class="btn btn-primary ms-2 retry-quiz" data-url="{% url 'training:quiz_take' pk=quiz.pk %}?retry=1" onclick="window.location.href=this.getAttribute('data-url')">
                             <i class="fas fa-redo"></i> Rozwiąż ponownie
                         </button>
                     {% endif %}
