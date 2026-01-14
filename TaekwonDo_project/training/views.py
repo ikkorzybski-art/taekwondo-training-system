@@ -403,6 +403,10 @@ def quiz_take(request, pk):
     # DEBUG: logujemy kto i co żąda — pomocne przy problemach z przekierowaniem
     try:
         print(f"DEBUG quiz_take: user={{request.user.username if request.user.is_authenticated else request.user}}, authenticated={{request.user.is_authenticated}}, latest_attempt_id={{latest_attempt.id if latest_attempt else None}}, retry={{retry}}")
+        print("DEBUG quiz_take: full_path=", request.get_full_path())
+        print("DEBUG quiz_take: GET dict=", dict(request.GET))
+        print("DEBUG quiz_take: QUERY_STRING=", request.META.get('QUERY_STRING'))
+        print("DEBUG quiz_take: repr(retry)=", repr(retry))
     except Exception as e:
         print('DEBUG quiz_take: failed to print debug info', e)
 
