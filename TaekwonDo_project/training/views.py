@@ -189,13 +189,8 @@ def dashboard(request):
 @login_required
 @login_required
 def profile_view(request):
-    """Profil użytkownika z powiadomieniami."""
-    profile = request.user.profile
-    notifications = request.user.notifications.all()
-    return render(request, 'training/profile.html', {
-        'profile': profile,
-        'notifications': notifications,
-    })
+    """Po wejściu w profil pokazuj panel użytkownika (dashboard)."""
+    return dashboard(request)
 
 @login_required
 def profile_edit_view(request):
