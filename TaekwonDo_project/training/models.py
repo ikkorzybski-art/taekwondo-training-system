@@ -7,6 +7,21 @@ from django.dispatch import receiver
 # Ordering of groups from lowest to highest
 GROUP_ORDER = ['white', 'yellow', 'green', 'blue', 'red', 'black']
 
+class Notification(models.Model):
+    """Powiadomienie dla użytkownika"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'Powiadomienie'
+        verbose_name_plural = 'Powiadomienia'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Powiadomienie dla {self.user.username}: {self.message}"
+
 class UserProfile(models.Model):
     """Profil użytkownika"""
     BELT_CHOICES = [

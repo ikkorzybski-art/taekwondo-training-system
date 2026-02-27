@@ -40,26 +40,41 @@
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown2">
                                 <li><a class="dropdown-item" href="{% url 'training:training_days_list' %}"><i class="fas fa-calendar"></i> Dni treningowe</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-user-check"></i> Obecność</a></li>
-                                {% if user.is_staff %}
+                                <li><a class="dropdown-item" href="{% url 'training:attendance_list' %}"><i class="fas fa-user-check"></i> Obecność</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{% url 'training:manage_private_lessons' %}"><i class="fas fa-calendar-alt"></i> Zarządzaj zajęciami indywidualnymi</a></li>
-                                {% endif %}
+                                    {% if not user.is_staff %}
+                                        <li><a class="dropdown-item" href="{% url 'training:private_lesson_signup' %}"><i class="fas fa-user-plus"></i> Zapisz się na zajęcia indywidualne</a></li>
+                                    {% endif %}
+                                    {% if user.is_staff %}
+                                        <li><a class="dropdown-item" href="{% url 'training:manage_private_lessons' %}"><i class="fas fa-calendar-alt"></i> Zarządzaj zajęciami indywidualnymi</a></li>
+                                    {% endif %}
                             </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'training:profile' %}"><i class="fas fa-user"></i> Mój profil</a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownProfile" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> Mój profil
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownProfile">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'training:profile' %}"><i class="fas fa-user"></i> Profil</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'training:profile_edit' %}"><i class="fas fa-edit"></i> Edytuj dane konta</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{% url 'training:logout' %}" style="display:inline; margin: 0;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item text-danger" style="width: 100%; text-align: left;">
+                                            <i class="fas fa-sign-out-alt"></i> Wyloguj się
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item d-flex align-items-center">
                             <span class="nav-link text-light">{{ user.get_full_name|default:user.username }}</span>
-                        </li>
-                        <li class="nav-item">
-                            <form method="post" action="{% url 'training:logout' %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-light">
-                                    <i class="fas fa-sign-out-alt"></i> Wyloguj
-                                </button>
-                            </form>
+                            <span class="badge bg-success ms-2" title="Punkty za quizy">{{ quiz_points|default:0 }} pkt</span>
                         </li>
                     {% else %}
                         <!-- Menu rozwijane dla niezalogowanych użytkowników -->
@@ -88,7 +103,7 @@
     <!-- Stopka -->
     <footer>
         <div class="container text-center">
-            <p class="mb-0">&copy; 2025 TKD Training. Wszystkie prawa zastrzeżone.</p>
+            <p class="mb-0">&copy; 2003 Matsogi Ciechanów. <br>Wszystkie prawa zastrzeżone.</br></p>
         </div>
     </footer>
 

@@ -17,6 +17,7 @@ urlpatterns = [
     # Dashboard i profil
     path('dashboard/', views.dashboard, name='dashboard'),
     path('profile/', views.profile_view, name='profile'),
+    path('profile/edit/', views.profile_edit_view, name='profile_edit'),
     
     # Dni treningowe
     path('training-days/', views.training_days_list, name='training_days_list'),
@@ -41,6 +42,8 @@ urlpatterns = [
     # Moje wyniki
     path('my-results/', views.my_results, name='my_results'),
     
+    # Zajęcia indywidualne
+    path('private-lesson-signup/', views.private_lesson_signup, name='private_lesson_signup'),
     # Zajęcia indywidualne (ADMIN)
     path('manage-private-lessons/', views.manage_private_lessons, name='manage_private_lessons'),
     path('generate-weekly-lessons/', views.generate_weekly_lessons, name='generate_weekly_lessons'),

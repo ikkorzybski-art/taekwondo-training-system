@@ -87,8 +87,6 @@ django-tkd/
 │       ├── admin.py            # Konfiguracja panelu admina
 │       ├── templates/          # Szablony HTML
 │       └── static/             # Pliki statyczne (CSS)
-├── Nowy folder/                # Wersja użytkownika
-│   └── TaekwonDo_project/      # Struktura identyczna jak wyżej
 └── venv/                       # Środowisko wirtualne (nie w repo)
 ```
 

@@ -53,7 +53,7 @@
                             <i class="fas fa-arrow-left"></i> Powrót do listy quizów
                         </a>
                                 {% if quiz.is_active %}
-                        <a href="{% url 'training:quiz_take' pk=quiz.pk %}?retry=1" class="btn btn-primary ms-2 retry-quiz" role="button" aria-label="Rozwiąż ponownie">
+D                        <a href="{% url 'training:quiz_take' pk=quiz.pk %}?retry=1" class="btn btn-primary ms-2 retry-quiz" role="button" aria-label="Rozwiąż ponownie">
                             <i class="fas fa-redo"></i> Rozwiąż ponownie
                         </a>
                     {% endif %}
@@ -82,7 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h4><i class="fas fa-list"></i> Szczegóły odpowiedzi</h4>
                 </div>
                 <div class="card-body">
-                    {% for data in questions_data %}
+                    {% if questions_data %}
+                        {% for data in questions_data %}
                     <div class="card mb-3 {% if data.is_correct %}border-success{% else %}border-danger{% endif %}">
                         <div class="card-header {% if data.is_correct %}bg-success bg-opacity-10{% else %}bg-danger bg-opacity-10{% endif %}">
                             <div class="d-flex justify-content-between align-items-center">
@@ -99,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
                         <div class="card-body">
-                            <p class="fw-bold mb-3">{{ data.question.text }}</p>
+                            <p class="fw-bold mb-3">{{ data.question.question_text }}</p>
                             
                             <div class="ms-3">
                                 {% for answer in data.all_answers %}
@@ -111,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                            {% if answer == data.user_answer %}checked{% endif %}>
                                     
                                     <label class="form-check-label">
-                                        {{ answer.text }}
+                                        {{ answer.answer_text }}
                                         
                                         {% if answer == data.correct_answer %}
                                             <span class="badge bg-success ms-2">
@@ -137,6 +138,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                     {% endfor %}
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Brak dostępnych szczegółów odpowiedzi. Spróbuj rozwiązać quiz ponownie.
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 

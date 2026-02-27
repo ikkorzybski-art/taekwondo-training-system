@@ -11,7 +11,7 @@ from django.views.decorators.http import require_http_methods
 import csv
 from datetime import datetime, timedelta
 
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.contrib import messages
 from django.shortcuts import redirect, render
@@ -21,6 +21,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Count
+from django.db import models
 from .forms import ChangePasswordForm
 
 from .models import (UserProfile, TrainingDay, Attendance, Flashcard, 
@@ -55,7 +56,7 @@ def register_view(request):
             else:
                 messages.success(request, f'Użytkownik {user.username} został pomyślnie utworzony.')
             
-            return redirect('home')
+            return redirect('training:home')
     else:
         form = CustomUserCreationForm()
     
@@ -159,16 +160,19 @@ def home(request):
 def dashboard(request):
     """Panel użytkownika"""
     profile = request.user.profile
-    
+
     # Statystyki
     total_trainings = Attendance.objects.filter(user=request.user, present=True).count()
     quiz_attempts = QuizAttempt.objects.filter(user=request.user)
     passed_quizzes = quiz_attempts.filter(passed=True).count()
-    
+
+    # Punkty za quizy (suma score z QuizAttempt)
+    quiz_points = quiz_attempts.aggregate(total_points=models.Sum('score'))['total_points'] or 0
+
     # Ostatnie aktywności
     recent_attendance = Attendance.objects.filter(user=request.user).order_by('-date')[:5]
     recent_quizzes = quiz_attempts.order_by('-started_at')[:5]
-    
+
     context = {
         'profile': profile,
         'total_trainings': total_trainings,
@@ -176,30 +180,40 @@ def dashboard(request):
         'passed_quizzes': passed_quizzes,
         'recent_attendance': recent_attendance,
         'recent_quizzes': recent_quizzes,
+        'quiz_points': quiz_points,
     }
     return render(request, 'training/dashboard.html', context)
 
 # ===== PROFIL =====
 
 @login_required
+@login_required
 def profile_view(request):
-    """Profil użytkownika"""
+    """Profil użytkownika z powiadomieniami."""
     profile = request.user.profile
-    
+    notifications = request.user.notifications.all()
+    return render(request, 'training/profile.html', {
+        'profile': profile,
+        'notifications': notifications,
+    })
+
+@login_required
+def profile_edit_view(request):
+    """Edycja profilu użytkownika"""
+    profile = request.user.profile
     if request.method == 'POST':
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
             messages.success(request, 'Profil został zaktualizowany!')
-            return redirect('profile')
+            return redirect('training:profile')
     else:
         form = UserProfileForm(instance=profile)
-    
     context = {
         'form': form,
         'profile': profile,
     }
-    return render(request, 'training/profile.html', context)
+    return render(request, 'training/profile_edit.html', context)
 
 # ===== DNI TRENINGOWE =====
 
@@ -216,7 +230,7 @@ def training_day_create(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Dzień treningowy został dodany!')
-            return redirect('training_days_list')
+            return redirect('training:training_days_list')
     else:
         form = TrainingDayForm()
     
@@ -232,7 +246,7 @@ def training_day_edit(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Dzień treningowy został zaktualizowany!')
-            return redirect('training_days_list')
+            return redirect('training:training_days_list')
     else:
         form = TrainingDayForm(instance=training_day)
     
@@ -248,7 +262,7 @@ def training_day_delete(request, pk):
     training_day = get_object_or_404(TrainingDay, pk=pk)
     training_day.delete()
     messages.success(request, 'Dzień treningowy został usunięty!')
-    return redirect('training_days_list')
+    return redirect('training:training_days_list')
 
 # ===== OBECNOŚĆ =====
 
@@ -258,7 +272,7 @@ def attendance_list(request):
     if request.user.is_staff:
         attendances = Attendance.objects.select_related('user', 'training_day').all()
     else:
-        attendances = Attendance.objects.filter(user=request.user)
+        attendances = Attendance.objects.filter(user=request.user).select_related('user', 'training_day')
     
     # Filtrowanie
     date_from = request.GET.get('date_from')
@@ -293,7 +307,7 @@ def attendance_create(request):
             attendance.created_by = request.user
             attendance.save()
             messages.success(request, 'Obecność została zapisana!')
-            return redirect('attendance_list')
+            return redirect('training:attendance_list')
     else:
         form = AttendanceForm()
     
@@ -500,12 +514,16 @@ def quiz_result(request, pk, attempt_id):
         'question', 'selected_answer'
     ).prefetch_related('question__answers').all()
     
+    print(f"DEBUG: User answers count: {user_answers.count()}")  # Debugowanie
+    
     # Przygotuj dane pytań z odpowiedziami
     questions_data = []
     for user_answer in user_answers:
         question = user_answer.question
         all_answers = question.answers.all()
         correct_answer = all_answers.filter(is_correct=True).first()
+        
+        print(f"DEBUG: Question: {question.text}, User answer: {user_answer.selected_answer}, Is correct: {user_answer.is_correct}")
         
         questions_data.append({
             'question': question,
@@ -532,29 +550,6 @@ def quiz_result(request, pk, attempt_id):
         'avg_score': avg_score,
     }
     return render(request, 'training/quiz_result.html', context)
-    
-    # Statystyki
-    if attempts.exists():
-        best_score = attempts.order_by('-percentage').first()
-        avg_score = sum(a.percentage for a in attempts) / attempts.count()
-    else:
-        best_score = None
-        avg_score = 0
-    
-    context = {
-        'quiz': quiz,
-        'attempts': attempts,
-        'best_score': best_score,
-        'avg_score': avg_score,
-    }
-    return render(request, 'training/quiz_result.html', context)
-
-def index(request):
-    """Widok index - przekierowanie na stronę główną"""
-    from django.shortcuts import redirect
-    return redirect('training:home')
-
-# ===== ZAJĘCIA INDYWIDUALNE (ADMIN) =====
 
 @user_passes_test(is_staff)
 def manage_private_lessons(request):
@@ -664,11 +659,13 @@ def delete_private_lesson(request, lesson_id):
 @user_passes_test(is_staff)
 @require_http_methods(["POST"])
 def mark_lesson_completed(request, lesson_id):
-    """Oznacza zajęcia jako ukończone"""
+    """Oznacza zajęcia jako ukończone i usuwa osobę z rezerwacji"""
     lesson = get_object_or_404(PrivateLesson, id=lesson_id)
     lesson.status = 'completed'
+    if lesson.student is not None:
+        lesson.student = None
     lesson.save()
-    messages.success(request, 'Zajęcia oznaczono jako ukończone.')
+    messages.success(request, 'Zajęcia oznaczono jako ukończone, uczestnik został usunięty.')
     return redirect('training:manage_private_lessons')
 
 
@@ -741,5 +738,36 @@ def index(request):
 
 @login_required
 def private_lessons_list(request):
-    """Lista dostÄ™pnych zajÄ™Ä‡ indywidualnych"""
-    # Pobierz wszystkie dostÄ™pne terminy (nieuczÄ™szczane)
+    """Lista dostępnych zajęć indywidualnych"""
+    # Pobierz wszystkie dostępne terminy (nieuczestniczone)
+    pass
+
+# ===== ZAJĘCIA INDYWIDUALNE - ZAPIS =====
+from .models import PrivateLesson
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def private_lesson_signup(request):
+    """Zapis na zajęcia indywidualne dla użytkownika"""
+    user = request.user
+    # Pobierz dostępne terminy
+    available_lessons = PrivateLesson.objects.filter(status='available')
+    if request.method == 'POST':
+        lesson_id = request.POST.get('lesson_id')
+        lesson = PrivateLesson.objects.filter(id=lesson_id, status='available').first()
+        if lesson:
+            lesson.student = user
+            lesson.status = 'booked'
+            lesson.save()
+            from .models import Notification
+            Notification.objects.create(
+                user=lesson.instructor,
+                message=f'Użytkownik {user.get_full_name() or user.username} zapisał się na zajęcia indywidualne w dniu {lesson.date} o {lesson.start_time}.',
+            )
+            from django.contrib import messages
+            messages.success(request, f'Zostałeś zapisany na zajęcia indywidualne w dniu {lesson.date} o {lesson.start_time}.')
+            return redirect('training:private_lesson_signup')
+        else:
+            from django.contrib import messages
+            messages.error(request, 'Wybrany termin nie jest już dostępny.')
+    return render(request, 'training/private_lesson_signup.html', {'available_lessons': available_lessons})

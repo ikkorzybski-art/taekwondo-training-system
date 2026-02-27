@@ -121,7 +121,16 @@
                         <tbody>
                             {% for lesson in lessons %}
                                 <tr>
-                                    <td>{{ lesson.date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        {% if lesson.date.weekday == 0 %}Poniedziałek
+                                        {% elif lesson.date.weekday == 1 %}Wtorek
+                                        {% elif lesson.date.weekday == 2 %}Środa
+                                        {% elif lesson.date.weekday == 3 %}Czwartek
+                                        {% elif lesson.date.weekday == 4 %}Piątek
+                                        {% elif lesson.date.weekday == 5 %}Sobota
+                                        {% else %}Niedziela
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         {% if lesson.date.weekday == 0 %}
                                             <span class="badge bg-secondary">Poniedziałek</span>
@@ -142,7 +151,7 @@
                                     <td>{{ lesson.start_time|time:"H:i" }} - {{ lesson.end_time|time:"H:i" }}</td>
                                     <td>{{ lesson.instructor.get_full_name }}</td>
                                     <td>
-                                        {% if lesson.student %}
+                                        {% if lesson.status == 'booked' and lesson.student %}
                                             {{ lesson.student.get_full_name }}
                                         {% else %}
                                             <span class="text-muted">-</span>
